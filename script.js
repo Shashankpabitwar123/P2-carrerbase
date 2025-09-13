@@ -302,3 +302,23 @@ function makeSVG(kind){
   };
   return base.replace("%%ICON%%", icons[kind] || icons["chip"]);
 }
+
+/* --- Robust close triggers --- */
+// Close when clicking any element tagged with [data-close], or any .modal-close
+modal.addEventListener('click', (e)=>{
+  const t = e.target;
+  if (t.dataset && t.dataset.close) { closeModal(); }
+  if (t.classList && t.classList.contains('modal-close')) { closeModal(); }
+});
+
+// Also support Enter/Space on the close button for accessibility
+modalClose.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' || e.key===' '){ e.preventDefault(); closeModal(); }
+});
+
+/* --- Intel logo intro glow on page load --- */
+const intelLogoEl = document.querySelector('.intel-logo');
+if(intelLogoEl){
+  intelLogoEl.classList.add('glow-on');
+  setTimeout(()=>intelLogoEl.classList.remove('glow-on'), 2400);
+}
