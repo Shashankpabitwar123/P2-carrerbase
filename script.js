@@ -139,7 +139,8 @@ function render(list){
   scheduleObserve();
   syncScrubber();
 }
-render(filtered);
+/* SAFE INITIALIZE */
+try{ render(filtered); }catch(e){ console.error(e); }
 
 /* ---------- Filters (fixed listeners) ---------- */
 function prettyCat(c){
@@ -159,7 +160,8 @@ function applyFilters(){
     return matchesCat && matchesQ;
   });
   activeCard = null;                    // clear glow when list changes
-  render(filtered);
+  /* SAFE INITIALIZE */
+try{ render(filtered); }catch(e){ console.error(e); }
 }
 searchInput.addEventListener('input', debounce(applyFilters, 120));
 categorySelect.addEventListener('change', applyFilters);
@@ -214,7 +216,11 @@ function openModal(evt, cardEl){
   // focus the close button for keyboard users
   setTimeout(()=>modalClose.focus(), 10);
 }
+/* CLOSEMODAL ENHANCED */
 function closeModal(){
+  try { history.replaceState(null, '', location.pathname); } catch(e){}
+  const hero = document.getElementById('heroTop');
+  if(hero){ hero.scrollIntoView({behavior:'smooth', block:'start'}); }
   modal.setAttribute('aria-hidden','true');
   if(activeCard){ activeCard.classList.remove('active-glow'); activeCard = null; }
 }
@@ -322,3 +328,32 @@ if(intelLogoEl){
   intelLogoEl.classList.add('glow-on');
   setTimeout(()=>intelLogoEl.classList.remove('glow-on'), 2400);
 }
+
+/* --- Global delegates to guarantee the ✕ closes everywhere --- */
+function isModalOpen(){ return modal && modal.getAttribute('aria-hidden') === 'false'; }
+
+function handleGlobalClose(e){
+  if(!isModalOpen()) return;
+  const t = e.target;
+  if (t && (t.closest && t.closest('.modal-close'))) {
+    e.preventDefault();
+    closeModal();
+  }
+}
+
+document.addEventListener('click', handleGlobalClose, true);
+document.addEventListener('pointerup', handleGlobalClose, true);
+document.addEventListener('touchend', handleGlobalClose, true);
+
+
+/* --- Harden search/filter wiring --- */
+function safeApplyFilters(){ try{ applyFilters(); }catch(e){ console.error(e); } }
+
+if (searchInput){
+  searchInput.addEventListener('keyup', safeApplyFilters);
+  searchInput.addEventListener('change', safeApplyFilters);
+}
+if (categorySelect){
+  categorySelect.addEventListener('input', safeApplyFilters);
+}
+
